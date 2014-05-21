@@ -19,7 +19,9 @@ namespace Widop\GoogleAnalytics;
 class Query
 {
     /** @const The Google analytics service URL. */
-    const URL = 'https://www.googleapis.com/analytics/v3/data/ga';
+    const GA_URL = 'https://www.googleapis.com/analytics/v3/data/ga';
+    /** @const The Google analytics Realtime service URL */
+    const REALTIME_URL = 'https://www.googleapis.com/analytics/v3/data/realtime';
 
     /** @var string */
     protected $ids;
@@ -57,6 +59,12 @@ class Query
     /** @var string */
     protected $callback;
 
+    /** @var integer
+     * 0 - GA
+     * 1 - GA Realtime
+     */
+    protected $type;
+
     /**
      * Creates a google analytics query.
      *
@@ -73,6 +81,21 @@ class Query
         $this->startIndex = 1;
         $this->maxResults = 10000;
         $this->prettyPrint = false;
+        $this->type = 0;
+    }
+
+    /**
+     * Sets the google analytics query type
+     *
+     * @param integer $type
+     *
+     * @return \Widop\GoogleAnalytics\Query The query.
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+
+        return $this;
     }
 
     /**
@@ -558,6 +581,12 @@ class Query
             $query['callback'] = $this->getCallback();
         }
 
-        return sprintf('%s?%s', self::URL, http_build_query($query));
+        if ($this->type == 0) {
+            $url = self::GA_URL;
+        } else {
+            $url = self::REALTIME_URL;
+        }
+
+        return sprintf('%s?%s', $url, http_build_query($query));
     }
 }
