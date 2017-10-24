@@ -69,7 +69,7 @@ class Service
         $accessToken = $this->getClient()->getAccessToken();
         $uri = $query->build($accessToken);
         $content = $this->getClient()->getHttpAdapter()->getContent($uri);
-        $json = json_decode($content, true);
+        $json = json_decode($content->getBody(), true);
 
         if (!is_array($json) || isset($json['error'])) {
             throw GoogleAnalyticsException::invalidQuery(isset($json['error']) ? $json['error']['message'] : 'Invalid json');
