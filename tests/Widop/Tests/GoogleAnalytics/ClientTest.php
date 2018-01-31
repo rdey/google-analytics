@@ -27,7 +27,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     protected $clientId;
 
     /** @var string */
-    protected $privateKeyFile;
+    protected $privateKey;
 
     /** @var string */
     protected $url;
@@ -41,11 +41,11 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->clientId = 'client_id';
-        $this->privateKeyFile = __DIR__.'/Fixtures/certificate.p12';
+        $this->privateKey = base64_encode(file_get_contents(__DIR__.'/Fixtures/certificate.p12'));
         $this->httpAdapterMock = $this->getMock('Widop\HttpAdapter\HttpAdapterInterface');
         $this->url = 'https://foo';
 
-        $this->client = new Client($this->clientId, $this->privateKeyFile, $this->httpAdapterMock, $this->url);
+        $this->client = new Client($this->clientId, $this->privateKey, $this->httpAdapterMock, $this->url);
     }
 
     /**
@@ -55,7 +55,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     {
         unset($this->client);
         unset($this->clientId);
-        unset($this->privateKeyFile);
+        unset($this->privateKey);
         unset($this->httpAdapterMock);
         unset($this->url);
     }
@@ -63,7 +63,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     public function testDefaultState()
     {
         $this->assertSame($this->clientId, $this->client->getClientId());
-        $this->assertSame($this->privateKeyFile, $this->client->getPrivateKeyFile());
+        $this->assertSame($this->privateKey, $this->client->getPrivateKey());
         $this->assertSame($this->httpAdapterMock, $this->client->getHttpAdapter());
         $this->assertSame($this->url, $this->client->getUrl());
     }
@@ -105,9 +105,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     /**
      * @expectedException \Widop\GoogleAnalytics\GoogleAnalyticsException
      */
-    public function testInvalidPrivateKeyFile()
+    public function testInvalidPrivateKey()
     {
-        $this->client->setPrivateKeyFile('/foo.p12');
+        $this->client->setPrivateKey(null);
         $this->client->getAccessToken();
     }
 
@@ -116,7 +116,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidPkcs12Format()
     {
-        $this->client->setPrivateKeyFile(__DIR__.'/Fixtures/invalid_format.p12');
+        $this->client->setPrivateKey(base64_encode(file_get_contents(__DIR__.'/Fixtures/invalid_format.p12')));
         $this->client->getAccessToken();
     }
 }

@@ -27,7 +27,7 @@ class Client
     protected $clientId;
 
     /** @var string */
-    protected $privateKeyFile;
+    protected $privateKey;
 
     /** @var \Widop\HttpAdapterBundle\Model\HttpAdapterInterface */
     protected $httpAdapter;
@@ -42,18 +42,18 @@ class Client
      * Creates a client.
      *
      * @param string                                              $clientId       The client ID.
-     * @param string                                              $privateKeyFile The absolute private key file path.
+     * @param string                                              $privateKey     The base64 representation of the private key.
      * @param \Widop\HttpAdapterBundle\Model\HttpAdapterInterface $httpAdapter    The http adapter.
      * @param string                                              $url            The google analytics service url.
      */
     public function __construct(
         $clientId,
-        $privateKeyFile,
+        $privateKey,
         HttpAdapterInterface $httpAdapter,
         $url = 'https://accounts.google.com/o/oauth2/token'
     ) {
         $this->setClientId($clientId);
-        $this->setPrivateKeyFile($privateKeyFile);
+        $this->setPrivateKey($privateKey);
         $this->setHttpAdapter($httpAdapter);
         $this->setUrl($url);
     }
@@ -83,31 +83,31 @@ class Client
     }
 
     /**
-     * Gets the absolute private key file path.
+     * Gets the base64 representation of the private key.
      *
-     * @return string The absolute private key file path.
+     * @return string The base64 representation of the private key
      */
-    public function getPrivateKeyFile()
+    public function getPrivateKey()
     {
-        return $this->privateKeyFile;
+        return $this->privateKey;
     }
 
     /**
-     * Sets the absolute private key file path.
+     * Sets the base64 representation of the private key
      *
-     * @param string $privateKeyFile The absolute private key file path.
+     * @param string $privateKey The base64 representation of the private key
      *
-     * @throws \Widop\GoogleAnalytics\Exception\GoogleAnalyticsException If the private key file does not exist.
+     * @throws \Widop\GoogleAnalytics\Exception\GoogleAnalyticsException If the private key does not exist.
      *
      * @return \Widop\GoogleAnalytics\Client The client.
      */
-    public function setPrivateKeyFile($privateKeyFile)
+    public function setPrivateKey($privateKey)
     {
-        if (!file_exists($privateKeyFile)) {
-            throw GoogleAnalyticsException::invalidPrivateKeyFile($privateKeyFile);
+        if (is_null($privateKey)) {
+            throw GoogleAnalyticsException::invalidPrivateKey();
         }
 
-        $this->privateKeyFile = $privateKeyFile;
+        $this->privateKey = $privateKey;
 
         return $this;
     }
@@ -233,7 +233,7 @@ class Client
             throw GoogleAnalyticsException::invalidOpenSslExtension();
         }
 
-        $certificate = file_get_contents($this->privateKeyFile);
+        $certificate = base64_decode($this->privateKey);
 
         $certificates = array();
         if (!openssl_pkcs12_read($certificate, $certificates, 'notasecret')) {

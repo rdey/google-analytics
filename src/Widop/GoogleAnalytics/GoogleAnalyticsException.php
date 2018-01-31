@@ -31,15 +31,13 @@ class GoogleAnalyticsException extends \Exception
     }
 
     /**
-     * Gets the "INVALID PRIVATE KEY FILE" exception.
+     * Gets the "INVALID PRIVATE KEY" exception.
      *
-     * @param string $path The private key file path.
-     *
-     * @return \Widop\GoogleAnalytics\Exception\GoogleAnalyticsException The "INVALID PRIVATE KEY FILE" exception.
+     * @return \Widop\GoogleAnalytics\Exception\GoogleAnalyticsException The "INVALID PRIVATE KEY" exception.
      */
-    public static function invalidPrivateKeyFile($path)
+    public static function invalidPrivateKey()
     {
-        return new self(sprintf('The PKCS 12 certificate "%s" does not exist.', $path));
+        return new self('The PKCS 12 certificate does not exist.');
     }
 
     /**
