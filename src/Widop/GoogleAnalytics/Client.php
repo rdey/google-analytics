@@ -11,6 +11,7 @@
 
 namespace Widop\GoogleAnalytics;
 
+use Psr\Cache\CacheItemPoolInterface;
 use Widop\HttpAdapter\HttpAdapterInterface;
 
 /**
@@ -38,6 +39,9 @@ class Client
     /** @var string */
     protected $accessToken;
 
+    /** @var \Psr\Cache\CacheItemPoolInterface */
+    protected $cacheItemPool;
+
     /**
      * Creates a client.
      *
@@ -45,17 +49,20 @@ class Client
      * @param string                                              $privateKey     The base64 representation of the private key.
      * @param \Widop\HttpAdapterBundle\Model\HttpAdapterInterface $httpAdapter    The http adapter.
      * @param string                                              $url            The google analytics service url.
+     * @param \Psr\Cache\CacheItemPoolInterface                   $cacheItemPool  The accessToken cache item pool.
      */
     public function __construct(
         $clientId,
         $privateKey,
         HttpAdapterInterface $httpAdapter,
-        $url = 'https://accounts.google.com/o/oauth2/token'
+        $url = 'https://accounts.google.com/o/oauth2/token',
+        CacheItemPoolInterface $cacheItemPool
     ) {
         $this->setClientId($clientId);
         $this->setPrivateKey($privateKey);
         $this->setHttpAdapter($httpAdapter);
         $this->setUrl($url);
+        $this->cacheItemPool = $cacheItemPool;
     }
 
     /**
@@ -169,7 +176,9 @@ class Client
      */
     public function getAccessToken()
     {
-        if ($this->accessToken === null) {
+        $item = $this->cacheItemPool->getItem('widop_access_token');
+
+        if (!$item->isHit()) {
             $headers = array('Content-Type' => 'application/x-www-form-urlencoded');
             $content = array(
                 'grant_type'     => 'assertion',
@@ -183,10 +192,14 @@ class Client
                 throw GoogleAnalyticsException::invalidAccessToken($response->error);
             }
 
-            $this->accessToken = $response->access_token;
+            $accessToken = $response->access_token;
+
+            $item->set($accessToken);
+            $item->expiresAfter((int) $response->expires_in);
+            $this->cacheItemPool->save($item);
         }
 
-        return $this->accessToken;
+        return $item->get();
     }
 
     /**
