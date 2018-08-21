@@ -68,7 +68,7 @@ class Service
     {
         $accessToken = $this->getClient()->getAccessToken();
         $uri = $query->build($accessToken);
-        $content = $this->getClient()->getHttpAdapter()->getContent($uri);
+        $content = $this->getClient()->getHttpClient()->get($uri);
         $json = json_decode($content->getBody(), true);
 
         if (!is_array($json) || isset($json['error'])) {

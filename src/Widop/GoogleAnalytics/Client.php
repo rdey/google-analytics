@@ -12,7 +12,7 @@
 namespace Widop\GoogleAnalytics;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Widop\HttpAdapter\HttpAdapterInterface;
+use Http\Client\HttpClient;
 
 /**
  * Google analytics client.
@@ -30,8 +30,8 @@ class Client
     /** @var string */
     protected $privateKey;
 
-    /** @var \Widop\HttpAdapterBundle\Model\HttpAdapterInterface */
-    protected $httpAdapter;
+    /** @var HttpClient */
+    private $httpClient;
 
     /** @var string */
     protected $url;
@@ -47,20 +47,20 @@ class Client
      *
      * @param string                                              $clientId       The client ID.
      * @param string                                              $privateKey     The base64 representation of the private key.
-     * @param \Widop\HttpAdapterBundle\Model\HttpAdapterInterface $httpAdapter    The http adapter.
+     * @param HttpClient                                          $httpClient     The http client.
      * @param string                                              $url            The google analytics service url.
      * @param \Psr\Cache\CacheItemPoolInterface                   $cacheItemPool  The accessToken cache item pool.
      */
     public function __construct(
         $clientId,
         $privateKey,
-        HttpAdapterInterface $httpAdapter,
+        HttpClient $httpClient = null,
         $url = 'https://accounts.google.com/o/oauth2/token',
         CacheItemPoolInterface $cacheItemPool
     ) {
         $this->setClientId($clientId);
         $this->setPrivateKey($privateKey);
-        $this->setHttpAdapter($httpAdapter);
+        $this->httpClient = $httpClient;
         $this->setUrl($url);
         $this->cacheItemPool = $cacheItemPool;
     }
@@ -124,23 +124,9 @@ class Client
      *
      * @return \Widop\HttpAdapterBundle\Model\HttpAdapterInterface The http adapter.
      */
-    public function getHttpAdapter()
+    public function getHttpClient()
     {
-        return $this->httpAdapter;
-    }
-
-    /**
-     * Sets the http adapter.
-     *
-     * @param \Widop\HttpAdapterBundle\Model\HttpAdapterInterface $httpAdapter The http adapter.
-     *
-     * @return \Widop\GoogleAnalytics\Client The client.
-     */
-    public function setHttpAdapter(HttpAdapterInterface $httpAdapter)
-    {
-        $this->httpAdapter = $httpAdapter;
-
-        return $this;
+        return $this->httpClient;
     }
 
     /**
@@ -180,13 +166,13 @@ class Client
 
         if (!$item->isHit()) {
             $headers = array('Content-Type' => 'application/x-www-form-urlencoded');
-            $content = array(
+            $content = http_build_query(array(
                 'grant_type'     => 'assertion',
                 'assertion_type' => 'http://oauth.net/grant_type/jwt/1.0/bearer',
                 'assertion'      => $this->generateJsonWebToken(),
-            );
+            ));
 
-            $response = json_decode($this->httpAdapter->postContent($this->url, $headers, $content)->getBody());
+            $response = json_decode($this->httpClient->post($this->url, $headers, $content)->getBody());
 
             if (isset($response->error)) {
                 throw GoogleAnalyticsException::invalidAccessToken($response->error);
