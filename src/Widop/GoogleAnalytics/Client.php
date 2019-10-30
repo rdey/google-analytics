@@ -12,7 +12,7 @@
 namespace Widop\GoogleAnalytics;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Http\Client\HttpClient;
+use Http\Client\Common\HttpMethodsClient;
 
 /**
  * Google analytics client.
@@ -30,7 +30,7 @@ class Client
     /** @var string */
     protected $privateKey;
 
-    /** @var HttpClient */
+    /** @var HttpMethodsClient */
     private $httpClient;
 
     /** @var string */
@@ -47,14 +47,14 @@ class Client
      *
      * @param string                                              $clientId       The client ID.
      * @param string                                              $privateKey     The base64 representation of the private key.
-     * @param HttpClient                                          $httpClient     The http client.
+     * @param HttpMethodsClient                                   $httpClient     The http client.
      * @param string                                              $url            The google analytics service url.
      * @param \Psr\Cache\CacheItemPoolInterface                   $cacheItemPool  The accessToken cache item pool.
      */
     public function __construct(
         $clientId,
         $privateKey,
-        HttpClient $httpClient = null,
+        HttpMethodsClient $httpClient = null,
         $url = 'https://accounts.google.com/o/oauth2/token',
         CacheItemPoolInterface $cacheItemPool
     ) {
@@ -122,7 +122,7 @@ class Client
     /**
      * Gets the http adapter.
      *
-     * @return \Widop\HttpAdapterBundle\Model\HttpAdapterInterface The http adapter.
+     * @return HttpMethodsClient
      */
     public function getHttpClient()
     {
